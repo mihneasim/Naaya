@@ -93,5 +93,6 @@ def test_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(BasicSchemaTest))
     suite.addTest(unittest.FunctionTestCase(test_parse_initial_value))
+    suite.addTest(doctest.DocTestSuite('naaya.core.schema.basic'))
     suite.addTest(doctest.DocTestSuite('naaya.core.schema.validators'))
     return suite

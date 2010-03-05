@@ -30,6 +30,22 @@ class Widget(object):
         self.__dict__.update(kwargs)
 
 class Schema(object):
+    """
+    Naaya Schema class. It's basically a container for Widgets, along
+    with some wrapper code over the ``formencode`` library, which does
+    most of the work.
+
+      >>> schema = Schema()
+      >>> schema.add('title', Widget(label='Title', validator='unicode',
+      ...                            required=True))
+      >>> schema.add('sortorder', Widget(label='Sort order', validator='int',
+      ...                                initial='int:100'))
+      >>> py_data = schema.to_python({'title': 'My New Object'})
+      >>> sorted(py_data.items())
+      [('sortorder', 100), ('title', u'My New Object')]
+
+    """
+
     def __init__(self):
         self.widgets = []
 
@@ -37,12 +53,18 @@ class Schema(object):
         self.widgets.append(SchemaEntry(name, widget))
 
     def to_python(self, str_data):
+        """ Shorthand for ``schema.get_validator().to_python(str_data)`` """
         return self.get_validator().to_python(str_data)
 
 #    def from_python(self, py_data):
+#        """ Shorthand for ``schema.get_validator().from_python(py_data)`` """
 #        return self.get_validator().from_python(py_data)
 
     def get_validator(self):
+        """
+        Construct and return a ``formencode.Schema`` object from
+        this schema's widgets.
+        """
         validators = {}
         for entry in self.widgets:
             validators[entry.name] = self.get_widget_validator(entry.widget)
