@@ -1,0 +1,13 @@
+<span tal:replace="structure here/manage_page_header" />
+<span tal:replace="structure here/manage_tabs" />
+
+<form method="post">
+    <fieldset>
+    <legend>Edit widget <strong tal:content="options/name" /></legend>
+    <input type="hidden" name="name" tal:attributes="value options/name" />
+    <tal:block content="structure options/render_fields" />
+    <input type="submit" value="Save properties" />
+    </fieldset>
+</form>
+
+<span tal:replace="structure here/manage_page_footer" />

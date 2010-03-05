@@ -29,6 +29,11 @@ class Widget(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
+    def __repr__(self):
+        self._p_activate()
+        return 'Widget(%s)' % ', '.join('%s=%r' % (k,v) for
+                                         (k,v) in self.__dict__.iteritems())
+
 class Schema(object):
     """
     Naaya Schema class. It's basically a container for Widgets, along
