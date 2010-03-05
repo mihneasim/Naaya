@@ -17,43 +17,36 @@
 #
 # Alex Morega, Eau de Web
 
-def parse_initial_value(in_value):
-    """
-    Parse a string to a Python value.
+import formencode.schema
 
-      >>> parse_initial_value('int:13')
-      13
-      >>> parse_initial_value('str:asdf')
-      'asdf'
-      >>> parse_initial_value('unicode:')
-      u''
-      >>> parse_initial_value('bool:True')
-      True
-      >>> parse_initial_value('None')
-      >>> print parse_initial_value('None')
-      None
-      >>> parse_initial_value('borked')
-      Traceback (most recent call last):
-          ...
-      ValueError: Can't parse value: 'borked'
-    """
+from Products.NaayaCore.backport import namedtuple
+from validators import get_validator_by_name
 
-    cant_parse = lambda: ValueError("Can't parse value: %r" % in_value)
+SchemaEntry = namedtuple('SchemaEntry', 'name widget')
 
-    if in_value == 'None':
-        return None
-    elif in_value.startswith('str:'):
-        return in_value[len('str:'):]
-    elif in_value.startswith('unicode:'):
-        return unicode(in_value[len('unicode:'):])
-    elif in_value.startswith('int:'):
-        return int(in_value[len('int:'):])
-    elif in_value.startswith('bool:'):
-        if in_value in ('bool:', 'bool:False'):
-            return False
-        elif in_value == 'bool:True':
-            return True
-        else:
-            raise cant_parse()
-    else:
-        raise cant_parse()
+class Widget(object):
+    required = False
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+class Schema(object):
+    def __init__(self):
+        self.widgets = []
+
+    def add(self, name, widget):
+        self.widgets.append(SchemaEntry(name, widget))
+
+    def to_python(self, str_data):
+        return self.get_validator().to_python(str_data)
+
+#    def from_python(self, py_data):
+#        return self.get_validator().from_python(py_data)
+
+    def get_validator(self):
+        validators = {}
+        for entry in self.widgets:
+            validators[entry.name] = self.get_widget_validator(entry.widget)
+        return formencode.schema.Schema(**validators)
+
+    def get_widget_validator(self, widget):
+        return get_validator_by_name(widget.validator)(widget)

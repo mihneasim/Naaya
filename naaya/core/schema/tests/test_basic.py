@@ -20,7 +20,16 @@
 import unittest
 import doctest
 
+import formencode
+
 from naaya.core.schema import basic
+from naaya.core.schema.validators import parse_initial_value
+
+def make_schema(*args):
+    s = basic.Schema()
+    for widget_spec in args:
+        s.add(widget_spec['label'], basic.Widget(**widget_spec))
+    return s
 
 def test_parse_initial_value():
     expected_valid = {
@@ -42,13 +51,13 @@ def test_parse_initial_value():
                         'bool:1', 'bool:true')
 
     for in_value, expected_value in expected_valid.iteritems():
-        out_value = basic.parse_initial_value(in_value)
+        out_value = parse_initial_value(in_value)
         assert type(out_value) is type(expected_value)
         assert out_value == expected_value
 
     for in_value in expected_invalid:
         try:
-            basic.parse_initial_value(in_value)
+            parse_initial_value(in_value)
         except ValueError:
             pass
         except Exception, e:
@@ -56,8 +65,33 @@ def test_parse_initial_value():
         else:
             assert False, "ValueError not raised for input %r" % in_value
 
+class BasicSchemaTest(unittest.TestCase):
+    def test_to_python(self):
+        schema = make_schema(
+            {'label': "num", 'validator': 'int'},
+            {'label': "uni", 'validator': 'unicode'})
+        py_value = schema.to_python({'num': '13', 'uni': 'asdf'})
+        self.assertEqual(py_value, {'num': 13, 'uni': u'asdf'})
+        self.assertTrue(type(py_value['uni']) is unicode)
+
+        self.assertRaises(formencode.Invalid,
+                          schema.to_python, {'num': 'qwer', 'uni': 'asdf'})
+        self.assertRaises(formencode.Invalid,
+                          schema.to_python, {'uni': 'asdf'})
+        self.assertRaises(formencode.Invalid,
+                          schema.to_python, {'num': '13'})
+
+    def test_to_python_with_defaults(self):
+        schema = make_schema(
+            {'label': "num", 'validator': 'int', 'initial': 'int:50'},
+            {'label': "uni", 'validator': 'unicode', 'initial': 'unicode:x'})
+        py_value = schema.to_python({})
+        self.assertEqual(py_value, {'num': 50, 'uni': u'x'})
+        self.assertTrue(type(py_value['uni']) is unicode)
+
 def test_suite():
     suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(BasicSchemaTest))
     suite.addTest(unittest.FunctionTestCase(test_parse_initial_value))
-    suite.addTest(doctest.DocTestSuite(basic))
+    suite.addTest(doctest.DocTestSuite('naaya.core.schema.validators'))
     return suite
