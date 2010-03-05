@@ -89,6 +89,14 @@ class BasicSchemaTest(unittest.TestCase):
         self.assertEqual(py_value, {'num': 50, 'uni': u'x'})
         self.assertTrue(type(py_value['uni']) is unicode)
 
+    def test_from_python(self):
+        schema = make_schema(
+            {'label': "num", 'validator': 'int'},
+            {'label': "uni", 'validator': 'unicode'})
+        str_value = schema.from_python({'num': 13, 'uni': u'hello world'})
+        self.assertTrue(type(str_value['uni']) is str)
+        # strangely enough, type(str_value['num']) is int. formencode is weird.
+
 def test_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(BasicSchemaTest))

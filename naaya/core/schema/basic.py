@@ -46,19 +46,22 @@ class Schema(object):
 
     """
 
+    widget_list_factory = list
+
     def __init__(self):
-        self.widgets = []
+        self.widgets = self.widget_list_factory()
 
     def add(self, name, widget):
+        assert name not in dict(self.widgets)
         self.widgets.append(SchemaEntry(name, widget))
 
     def to_python(self, str_data):
         """ Shorthand for ``schema.get_validator().to_python(str_data)`` """
         return self.get_validator().to_python(str_data)
 
-#    def from_python(self, py_data):
-#        """ Shorthand for ``schema.get_validator().from_python(py_data)`` """
-#        return self.get_validator().from_python(py_data)
+    def from_python(self, py_data):
+        """ Shorthand for ``schema.get_validator().from_python(py_data)`` """
+        return self.get_validator().from_python(py_data)
 
     def get_validator(self):
         """
