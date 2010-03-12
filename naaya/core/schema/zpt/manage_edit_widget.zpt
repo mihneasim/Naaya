@@ -1,11 +1,38 @@
 <span tal:replace="structure here/manage_page_header" />
 <span tal:replace="structure here/manage_tabs" />
 
+<ul tal:condition="options/messages">
+    <li tal:repeat="message options/messages" tal:content="message" />
+</ul>
+
+<ul tal:condition="options/errors" style="color: red;">
+    <li tal:repeat="error options/errors" tal:content="error" />
+</ul>
+
 <form method="post">
     <fieldset>
     <legend>Edit widget <strong tal:content="options/name" /></legend>
     <input type="hidden" name="name" tal:attributes="value options/name" />
+
     <tal:block content="structure options/render_fields" />
+
+<!--
+    <tal:block repeat="field options/widget_form/fields">
+        <div tal:attributes="python:test(field.widget.small, 'field-inline',
+                                                             'field')">
+
+            <label tal:attributes="for field.html_id"
+                   tal:content="field/label" />
+
+            <tal:block content="field/render_input" />
+
+            <p tal:conditoin="field/errors"
+               tal:content="field/errors" />
+
+        </div>
+    </tal:block>
+-->
+
     <input type="submit" value="Save properties" />
     </fieldset>
 </form>

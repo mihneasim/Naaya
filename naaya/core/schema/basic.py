@@ -17,6 +17,7 @@
 #
 # Alex Morega, Eau de Web
 
+import formencode
 import formencode.schema
 import formencode.validators
 
@@ -30,9 +31,8 @@ class Widget(object):
         self.__dict__.update(kwargs)
 
     def __repr__(self):
-        self._p_activate()
-        return 'Widget(%s)' % ', '.join('%s=%r' % (k,v) for
-                                         (k,v) in self.__dict__.iteritems())
+        kws = ', '.join('%s=%r' % kv for kv in self.__dict__.iteritems())
+        return 'Widget(%s)' % kws
 
 class Schema(object):
     """
@@ -76,7 +76,9 @@ class Schema(object):
         validators = {}
         for entry in self.widgets:
             validators[entry.name] = self.get_widget_validator(entry.widget)
-        return formencode.schema.Schema(**validators)
+        return formencode.schema.Schema(allow_extra_fields=True,
+                                        filter_extra_fields=True,
+                                        **validators)
 
     def get_widget_validator(self, widget):
         return get_validator_by_name(widget.validator)(widget)
@@ -138,6 +140,23 @@ def default_config(widget, validator):
 def unicode_validator(widget):
     return default_config(widget, formencode.validators.UnicodeString())
 validators_library['unicode'] = unicode_validator
+
+def check_ascii(value, state):
+    if type(value) is not str:
+        raise formencode.Invalid('Expected `str` value', value, state)
+
+    try:
+        value.decode('ascii')
+    except UnicodeDecodeError:
+        msg = 'Value must contain only ascii characters'
+        raise formencode.Invalid(msg, value, state)
+
+def ascii_validator(widget):
+    v = default_config(widget, formencode.validators.String(
+                encoding='ascii'))
+    v.validate_python = check_ascii
+    return v
+validators_library['ascii'] = ascii_validator
 
 def int_validator(widget):
     return default_config(widget, formencode.validators.Int())

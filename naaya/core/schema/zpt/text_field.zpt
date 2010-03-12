@@ -1,10 +1,13 @@
 <tal:block define="input_id string:${options/name}-input;
-                   value python:options['form_data'][options['name']]">
+                   name options/name;
+                   value python:options['data'][name];
+                   error python:options['errors'].get(name, None)">
 <div>
 <label tal:attributes="for input_id" tal:content="options/widget/label" />
 <input type="text"
        tal:attributes="name options/name;
                        value value;
                        id input_id" />
+<p tal:condition="error" tal:content="error" style="color: red;" />
 </div>
 </tal:block>

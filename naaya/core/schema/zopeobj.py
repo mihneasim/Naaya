@@ -19,9 +19,9 @@
 
 from StringIO import StringIO
 
+import formencode
 from persistent.list import PersistentList
 from persistent import Persistent
-
 from Globals import InitializeClass
 from OFS.SimpleItem import SimpleItem
 from Products.PageTemplates.PageTemplateFile import PageTemplateFile
@@ -32,7 +32,9 @@ class PersistentSchema(basic.Schema, Persistent):
     widget_list_factory = PersistentList
 
 class PersistentWidget(basic.Widget, Persistent):
-    pass
+    def __repr__(self):
+        self._p_activate()
+        return super(PersistentWidget, self).__repr__()
 
 class ZMISchema(SimpleItem, PersistentSchema):
     meta_type = 'Naaya New Schema'
@@ -64,27 +66,36 @@ class ZMISchema(SimpleItem, PersistentSchema):
         form_data = {}
         field_names = ['zmi_fields'] + obj.zmi_fields.split()
         for field_name in field_names:
-            w = basic.Widget(label=field_name, validator='unicode')
+            w = basic.Widget(label=field_name, validator='ascii')
             widget_schema.add(field_name, w)
 
-        tmpl_options = {'name': name, 'schema': widget_schema, 'messages': []}
+        form_errors = {}
+        tmpl_options = {'name': name, 'messages': [], 'errors': []}
 
         if REQUEST.REQUEST_METHOD == 'POST':
-            raise NotImplementedError
-            #try:
-            #    py_data = widget_schema.to_python(REQUEST.form)
-            #except formencode.Invalid, e:
-            #    tmpl_options['errors'] = e.error_dict
-            #else:
-            #    save_form_data(py_data, self)
-            #    tmpl_options['message'].append('Properties saved')
+            try:
+                form_data = dict(REQUEST.form)
+                py_data = widget_schema.to_python(form_data)
+
+            except formencode.Invalid, e:
+                if e.error_dict is not None:
+                    form_errors.update(e.error_dict)
+                    err_msg = 'Please correct the errors and try again'
+                else:
+                    err_msg = e.msg
+                tmpl_options['errors'].append(err_msg)
+
+            else:
+                for key, value in py_data.iteritems():
+                    setattr(obj, key, value)
+                tmpl_options['messages'].append('Properties saved')
+
         else:
             for field_name in field_names:
                 form_data[field_name] = getattr(obj, field_name)
-            tmpl_options['form_data'] = form_data
 
         tmpl_options['render_fields'] = lambda: \
-            render_fields(self, widget_schema, form_data)
+            render_fields(self, widget_schema, form_data, form_errors)
 
         return self._manage_edit_widget(REQUEST, **tmpl_options)
 
@@ -94,11 +105,11 @@ InitializeClass(ZMISchema)
 
 text_field = PageTemplateFile('zpt/text_field', globals())
 
-def render_fields(context, schema, form_data):
+def render_fields(context, schema, data, errors):
     tmpl = text_field.__of__(context)
     output = StringIO()
     for name, widget in schema.widgets:
-        output.write(tmpl(name=name, widget=widget, form_data=form_data))
+        output.write(tmpl(name=name, widget=widget, data=data, errors=errors))
     return output.getvalue()
 
 def manage_addZMISchema(context, id):
