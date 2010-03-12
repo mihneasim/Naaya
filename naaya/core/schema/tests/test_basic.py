@@ -23,7 +23,6 @@ import doctest
 import formencode
 
 from naaya.core.schema import basic
-from naaya.core.schema.validators import parse_initial_value
 
 def make_schema(*args):
     s = basic.Schema()
@@ -51,13 +50,13 @@ def test_parse_initial_value():
                         'bool:1', 'bool:true')
 
     for in_value, expected_value in expected_valid.iteritems():
-        out_value = parse_initial_value(in_value)
+        out_value = basic.parse_initial_value(in_value)
         assert type(out_value) is type(expected_value)
         assert out_value == expected_value
 
     for in_value in expected_invalid:
         try:
-            parse_initial_value(in_value)
+            basic.parse_initial_value(in_value)
         except ValueError:
             pass
         except Exception, e:
@@ -102,5 +101,4 @@ def test_suite():
     suite.addTest(unittest.makeSuite(BasicSchemaTest))
     suite.addTest(unittest.FunctionTestCase(test_parse_initial_value))
     suite.addTest(doctest.DocTestSuite('naaya.core.schema.basic'))
-    suite.addTest(doctest.DocTestSuite('naaya.core.schema.validators'))
     return suite
