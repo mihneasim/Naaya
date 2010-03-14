@@ -4,10 +4,9 @@
                    error python:options['errors'].get(name, None)">
 <div>
 <label tal:attributes="for input_id" tal:content="options/widget/label" />
-<input type="text"
-       tal:attributes="name options/name;
-                       value value;
-                       id input_id" />
+<metal:block define-macro="input">
+<input type="text" tal:attributes="name name; value value; id input_id" />
+</metal:block>
 <p tal:condition="error" tal:content="error" style="color: red;" />
 </div>
 </tal:block>

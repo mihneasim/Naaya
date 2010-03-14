@@ -14,24 +14,11 @@
     <legend>Edit widget <strong tal:content="options/name" /></legend>
     <input type="hidden" name="name" tal:attributes="value options/name" />
 
-    <tal:block content="structure options/render_fields" />
-
-<!--
-    <tal:block repeat="field options/widget_form/fields">
-        <div tal:attributes="python:test(field.widget.small, 'field-inline',
-                                                             'field')">
-
-            <label tal:attributes="for field.html_id"
-                   tal:content="field/label" />
-
-            <tal:block content="field/render_input" />
-
-            <p tal:conditoin="field/errors"
-               tal:content="field/errors" />
-
-        </div>
+    <tal:block define="form_data options/form_data;
+                       form_errors options/form_errors;
+                       form_widgets options/form_widgets">
+    <metal:block use-macro="here/nsch_form/macros/form" />
     </tal:block>
--->
 
     <input type="submit" value="Save properties" />
     </fieldset>

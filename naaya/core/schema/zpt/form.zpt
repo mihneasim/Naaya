@@ -1,0 +1,38 @@
+<tal:block define="form_data options/form_data;
+                   form_errors options/form_errors;
+                   form_widgets options/form_widgets">
+
+<metal:block define-macro="form">
+    <tal:block repeat="name_and_widget form_widgets">
+    <tal:block define="name name_and_widget/name;
+                       widget name_and_widget/widget;
+                       get_input_macro python:lambda widget:
+                                    here.nsch_text_field.macros['input']">
+
+        <metal:block define-macro="form-field">
+        <tal:block define="input_id string:${name}-input;
+                           value python:form_data[name];
+                           error python:form_errors.get(name, None)">
+
+        <div tal:define="field_linine widget/inline|nothing"
+             tal:attributes="class python:test(field_linine, 'field-inline',
+                                                             'field')">
+
+        <label tal:attributes="for input_id"
+               tal:content="widget/label"
+               i18n:translate="" />
+
+        <metal:block use-macro="python:get_input_macro(widget)" />
+
+        <p tal:condition="error" tal:content="error" style="color: red;" />
+
+        </div>
+
+        </tal:block>
+        </metal:block>
+
+    </tal:block>
+    </tal:block>
+</metal:block>
+
+</tal:block>

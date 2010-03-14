@@ -94,8 +94,9 @@ class ZMISchema(SimpleItem, PersistentSchema):
             for field_name in field_names:
                 form_data[field_name] = getattr(obj, field_name)
 
-        tmpl_options['render_fields'] = lambda: \
-            render_fields(self, widget_schema, form_data, form_errors)
+        tmpl_options['form_data'] = form_data
+        tmpl_options['form_errors'] = form_errors
+        tmpl_options['form_widgets'] = widget_schema.widgets
 
         return self._manage_edit_widget(REQUEST, **tmpl_options)
 
@@ -103,16 +104,11 @@ class ZMISchema(SimpleItem, PersistentSchema):
 
 InitializeClass(ZMISchema)
 
-text_field = PageTemplateFile('zpt/text_field', globals())
-
-def render_fields(context, schema, data, errors):
-    tmpl = text_field.__of__(context)
-    output = StringIO()
-    for name, widget in schema.widgets:
-        output.write(tmpl(name=name, widget=widget, data=data, errors=errors))
-    return output.getvalue()
-
 def manage_addZMISchema(context, id):
     context._setObject(id, ZMISchema(id))
     title = property(lambda self: "Schema for %s" % self.id)
 #from naaya.core.schema.zopeobj import manage_addZMISchema; manage_addZMISchema(self, 'story')
+
+from Products.Naaya.NySite import NySite
+NySite.nsch_text_field = PageTemplateFile('zpt/text_field', globals())
+NySite.nsch_form = PageTemplateFile('zpt/form', globals())
