@@ -61,12 +61,16 @@ class Schema(object):
         self.widgets.append(SchemaEntry(name, widget))
 
     def to_python(self, str_data):
-        """ Shorthand for ``schema.get_validator().to_python(str_data)`` """
-        return self.get_validator().to_python(str_data)
+        try:
+            return self.get_validator().to_python(str_data)
+        except formencode.Invalid, e:
+            raise ConversionError(e)
 
     def from_python(self, py_data):
-        """ Shorthand for ``schema.get_validator().from_python(py_data)`` """
-        return self.get_validator().from_python(py_data)
+        try:
+            return self.get_validator().from_python(py_data)
+        except formencode.Invalid, e:
+            raise ConversionError(e)
 
     def get_validator(self):
         """
@@ -82,6 +86,17 @@ class Schema(object):
 
     def get_widget_validator(self, widget):
         return get_validator_by_name(widget.validator)(widget)
+
+class ConversionError(Exception):
+    def __init__(self, formencode_exception):
+        if formencode_exception.error_dict is not None:
+            self.field_errors = formencode_exception.error_dict
+            self.msg = 'Please correct the errors and try again'
+        else:
+            self.field_errors = {}
+            self.msg = formencode_exception.msg
+
+        self.formencode_exception = formencode_exception
 
 
 def parse_initial_value(in_value):

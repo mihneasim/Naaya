@@ -1,0 +1,39 @@
+<tal:block define="input_name options/input_name;
+                   input_id string:${input_name}-input;
+                   widget options/widget;
+                   value python:options['data'][input_name];
+                   error python:options['errors'].get(input_name, None)">
+<div>
+<label tal:attributes="for input_id" tal:content="widget/label" />
+<p tal:condition="error" tal:content="error" style="color: red;" />
+<metal:block define-macro="input">
+
+<tal:block define="glossary_id widget/glossary_id;
+                   glossary nothing">
+<p tal:condition="python:glossary is not None" i18n:translate="">
+    <b i18n:name="tip" i18n:translate="">Tip:</b>
+    you can type free text in the field below or pick words from the list
+</p>
+<input type="text"
+       tal:define="size_max widget/size_max|nothing"
+       tal:attributes="value value;
+                       size widget/width|nothing;
+                       maxlength python:test(size_max, size_max, None);
+                       name string:${input_name}:utf8:ustring;
+                       id input_id" />
+<tal:block tal:condition="python:glossary is not None">
+    <label tal:attributes="for string:pick-${glossary}"
+           class="invisible"
+           i18n:translate="">Pick keywords</label>
+    <input type="button"
+           value="Pick"
+           tal:attributes="id string:pick-${glossary};
+                           onclick string:javascript:fPick(
+                                      '${glossary/absolute_url}/'
+                                      'GlossMap_html?ctrl=${input_name}');" />
+</tal:block>
+</tal:block>
+
+</metal:block>
+</div>
+</tal:block>

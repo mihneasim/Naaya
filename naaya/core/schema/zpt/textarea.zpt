@@ -1,0 +1,21 @@
+<tal:block define="input_name options/input_name;
+                   input_id string:${input_name}-input;
+                   widget options/widget;
+                   value python:options['data'][input_name];
+                   error python:options['errors'].get(input_name, None)">
+<div>
+<label tal:attributes="for input_id" tal:content="widget/label" />
+<p tal:condition="error" tal:content="error" style="color: red;" />
+<metal:block define-macro="input">
+<tal:block define="editor here/getEditorTool"
+           condition="widget/tinymce|nothing"
+           replace="structure python:editor.render(input_id,
+                                        curr_lang, image_support=True)" />
+<textarea tal:attributes="rows widget/rows|string:10;
+                          cols widget/columns|string:50;
+                          name string:${input_name}:utf8:ustring;
+                          id input_id"
+          tal:content="value"></textarea>
+</metal:block>
+</div>
+</tal:block>

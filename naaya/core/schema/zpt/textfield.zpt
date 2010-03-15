@@ -1,0 +1,14 @@
+<tal:block define="input_name options/input_name;
+                   input_id string:${input_name}-input;
+                   widget options/widget;
+                   value python:options['data'][input_name];
+                   error python:options['errors'].get(input_name, None)">
+<div>
+<label tal:attributes="for input_id" tal:content="widget/label" />
+<p tal:condition="error" tal:content="error" style="color: red;" />
+<metal:block define-macro="input">
+<input type="text"
+       tal:attributes="name input_name; value value; id input_id" />
+</metal:block>
+</div>
+</tal:block>

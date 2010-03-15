@@ -34,8 +34,6 @@ from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 from Acquisition import Implicit
 from zope.interface import implements
 from zope.event import notify
-from naaya.content.base.events import NyContentObjectAddEvent
-from naaya.content.base.events import NyContentObjectEditEvent
 
 #Product imports
 from Products.NaayaBase.NyContentType import NyContentType, NY_CONTENT_BASE_SCHEMA
@@ -47,6 +45,9 @@ from Products.NaayaBase.NyValidation import NyValidation
 from Products.NaayaBase.NyCheckControl import NyCheckControl
 from Products.NaayaBase.NyContentType import NyContentData
 from Products.NaayaCore.managers.utils import make_id
+from naaya.content.base.events import NyContentObjectAddEvent
+from naaya.content.base.events import NyContentObjectEditEvent
+from naaya.content.base.interfaces import ISchemaContentObject
 
 from interfaces import INyURL
 
@@ -332,7 +333,17 @@ class NyURL(url_item, NyAttributes, NyItem, NyCheckControl, NyValidation, NyCont
         _lang = schema_raw_data.pop('_lang', schema_raw_data.pop('lang', None))
         _releasedate = self.process_releasedate(schema_raw_data.pop('releasedate', ''), obj.releasedate)
 
-        form_errors = self.process_submitted_form(schema_raw_data, _lang, _override_releasedate=_releasedate)
+        #form_errors = self.process_submitted_form(schema_raw_data, _lang, _override_releasedate=_releasedate)
+
+        schema_raw_data['releasedate'] = _releasedate.strftime('%d/%m/%Y')
+        schema_adapter = ISchemaContentObject(self)
+        try:
+            py_form_data = schema_adapter.schema.to_python(schema_raw_data)
+        except formencode.Invalid, e:
+            form_errors = e.field_errors
+        else:
+            schema_adapter.save_schema_properties(py_form_data)
+            form_errors = {}
 
         if not form_errors:
             if self.discussion: self.open_for_comments()
@@ -371,21 +382,98 @@ class NyURL(url_item, NyAttributes, NyItem, NyCheckControl, NyValidation, NyCont
         return self.getFormsTool().getContent({'here': self}, 'url_edit')
 
     def get_schema_form_stuff(self):
-        from naaya.content.base.interfaces import ISchemaContentObject
         schema_adapter = ISchemaContentObject(self)
+        py_form_data = schema_adapter.get_schema_properties()
         return {
-            'form_data': schema_adapter.get_schema_properties(),
+            'form_data': schema_adapter.schema.from_python(py_form_data),
             'form_errors': {},
-            'form_widgets': schema_adapter.get_schema().widgets,
+            'form_widgets': schema_adapter.schema.widgets,
         }
 
 InitializeClass(NyURL)
 
-from naaya.core.schema import basic, zopeobj
-NyURL._nsch_schema = basic.Schema()
-for n in ['title', 'description', 'locator']:
-    w = basic.Widget(label=n, validator='ascii')
-    NyURL._nsch_schema.add(n, w)
+from naaya.core.schema.zopeobj import PersistentWidget, ZMISchema
+
+def create_default_zmi_schema(schema_id):
+    schema = ZMISchema(schema_id)
+
+    schema.add('title', PersistentWidget(
+                        label="Title",
+                        validator='unicode',
+                        template='naaya.core.schema.textfield',
+                        required=True,
+                        localized=True))
+
+    schema.add('description', PersistentWidget(
+                        label="Description",
+                        validator='unicode',
+                        template='naaya.core.schema.textarea',
+                        localized=True,
+                        tinymce=True))
+
+#    schema.add('geo_location', PersistentWidget(
+#                        label="Geographical location",
+#                        validator='geo',
+#                        template='naaya.core.schema.geolocation',
+#                        visible=False))
+
+#    schema.add('geo_type', PersistentWidget(
+#                        label="Geographical location type",
+#                        validator='ascii',
+#                        template='naaya.core.schema.geotype',
+#                        visible=False))
+
+    schema.add('coverage', PersistentWidget(
+                        label="Geographical coverage",
+                        validator='unicode',
+                        template='naaya.core.schema.glossary',
+                        glossary_id='coverage',
+                        localized=True))
+
+    schema.add('keywords', PersistentWidget(
+                        label="Keywords",
+                        validator='unicode',
+                        template='naaya.core.schema.glossary',
+                        glossary_id='keywords',
+                        localized=True))
+
+    schema.add('sortorder', PersistentWidget(
+                        label="Sort order",
+                        validator='int',
+                        template='naaya.core.schema.textfield',
+                        initial='int:100',
+                        required=True))
+
+#    schema.add('releasedate', PersistentWidget(
+#                        label="Release date",
+#                        validator='zopedate',
+#                        template='naaya.core.schema.date',
+#                        required=True))
+
+#    schema.add('discussion', PersistentWidget(
+#                        label="Open for comments",
+#                        validator='intbool',
+#                        template='naaya.core.schema.checkbox'))
+
+    return schema
+
+def create_url_zmi_schema():
+    schema = create_default_zmi_schema('naaya.content.url')
+
+#    schema.add('redirect', PersistentWidget(
+#                        label="Automatically redirect to the given URL",
+#                        validator='bool',
+#                        template='naaya.core.schema.checkbox'))
+
+    schema.add('locator', PersistentWidget(
+                        label="URL",
+                        validator='unicode',
+                        template='naaya.core.schema.textfield',
+                        localized=True))
+
+    return schema
+
+NyURL._nsch_schema = create_url_zmi_schema()
 
 manage_addNyURL_html = PageTemplateFile('zpt/url_manage_add', globals())
 manage_addNyURL_html.kind = config['meta_type']

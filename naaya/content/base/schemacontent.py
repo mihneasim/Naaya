@@ -29,20 +29,20 @@ class SchemaContentAdapter(object):
 
     def __init__(self, obj):
         self.obj = obj
-
-    def get_schema(self):
-        return self.obj._nsch_schema
+        self.schema = obj._nsch_schema
 
     def get_schema_properties(self):
         data = {}
-        names = set(n for n,w in self.get_schema().widgets)
+        names = set(n for n,w in self.schema.widgets)
         for name in names:
             data[name] = getattr(self.obj, name)
         return data
 
     def save_schema_properties(self, data):
-        names = set(n for n,w in self.get_schema().widgets)
-        assert set(data.iterkeys()) == names
-        for name in names:
+        widgets = dict(self.schema.widgets)
+        assert set(data.iterkeys()) == set(names.iterkeys())
+        for name, widget in widgets.iteritems():
+            if getattr(widget, 'localized', False):
+                raise NotImplementedError
             setattr(self.obj, name, data[name])
         return data

@@ -19,13 +19,13 @@
 
 from StringIO import StringIO
 
-import formencode
 from persistent.list import PersistentList
 from persistent import Persistent
 from Globals import InitializeClass
 from OFS.SimpleItem import SimpleItem
 from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 
+from Products.NaayaCore.FormsTool.NaayaTemplate import NaayaPageTemplateFile
 import basic
 
 class PersistentSchema(basic.Schema, Persistent):
@@ -70,20 +70,16 @@ class ZMISchema(SimpleItem, PersistentSchema):
             widget_schema.add(field_name, w)
 
         form_errors = {}
-        tmpl_options = {'name': name, 'messages': [], 'errors': []}
+        tmpl_options = {'input_name': name, 'messages': [], 'errors': []}
 
         if REQUEST.REQUEST_METHOD == 'POST':
             try:
                 form_data = dict(REQUEST.form)
                 py_data = widget_schema.to_python(form_data)
 
-            except formencode.Invalid, e:
-                if e.error_dict is not None:
-                    form_errors.update(e.error_dict)
-                    err_msg = 'Please correct the errors and try again'
-                else:
-                    err_msg = e.msg
-                tmpl_options['errors'].append(err_msg)
+            except basic.ConversionError, e:
+                tmpl_options['errors'].append(e.msg)
+                form_errors.update(e.field_errors)
 
             else:
                 for key, value in py_data.iteritems():
@@ -110,5 +106,29 @@ def manage_addZMISchema(context, id):
 #from naaya.core.schema.zopeobj import manage_addZMISchema; manage_addZMISchema(self, 'story')
 
 from Products.Naaya.NySite import NySite
-NySite.nsch_text_field = PageTemplateFile('zpt/text_field', globals())
-NySite.nsch_form = PageTemplateFile('zpt/form', globals())
+#NySite.nsch_text_field = PageTemplateFile('zpt/text_field', globals())
+#NySite.nsch_form = PageTemplateFile('zpt/form', globals())
+
+NaayaPageTemplateFile('zpt/form', globals(),
+                      'naaya.core.schema.form')
+
+NaayaPageTemplateFile('zpt/textfield', globals(),
+                      'naaya.core.schema.textfield')
+
+NaayaPageTemplateFile('zpt/textarea', globals(),
+                      'naaya.core.schema.textarea')
+
+#NaayaPageTemplateFile('zpt/geolocation', globals(),
+#                      'naaya.core.schema.geolocation')
+
+#NaayaPageTemplateFile('zpt/geotype', globals(),
+#                      'naaya.core.schema.geotype')
+
+NaayaPageTemplateFile('zpt/glossary', globals(),
+                      'naaya.core.schema.glossary')
+
+#NaayaPageTemplateFile('zpt/date', globals(),
+#                      'naaya.core.schema.date')
+
+#NaayaPageTemplateFile('zpt/checkbox', globals(),
+#                      'naaya.core.schema.checkbox')

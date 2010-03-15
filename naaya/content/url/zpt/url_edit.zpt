@@ -2,13 +2,4 @@
 
 <h1 metal:fill-slot="title" i18n:translate="">Edit URL</h1>
 
-<metal:block fill-slot="schema_properties">
-    <tal:block define="schema_form_stuff here/get_schema_form_stuff;
-                       form_data schema_form_stuff/form_data;
-                       form_errors schema_form_stuff/form_errors;
-                       form_widgets schema_form_stuff/form_widgets">
-    <metal:block use-macro="here/nsch_form/macros/form" />
-    </tal:block>
-</metal:block>
-
 </tal:block>

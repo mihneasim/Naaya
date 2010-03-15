@@ -4,15 +4,16 @@
 
 <metal:block define-macro="form">
     <tal:block repeat="name_and_widget form_widgets">
-    <tal:block define="name name_and_widget/name;
+    <tal:block define="input_name name_and_widget/name;
                        widget name_and_widget/widget;
-                       get_input_macro python:lambda widget:
-                                    here.nsch_text_field.macros['input']">
+                       portal_forms here/getFormsTool;
+                       template_name widget/template;
+                       input_template python:portal_forms.getForm(template_name)">
 
         <metal:block define-macro="form-field">
-        <tal:block define="input_id string:${name}-input;
-                           value python:form_data[name];
-                           error python:form_errors.get(name, None)">
+        <tal:block define="input_id string:${input_name}-input;
+                           value python:form_data[input_name];
+                           error python:form_errors.get(input_name, None)">
 
         <div tal:define="field_linine widget/inline|nothing"
              tal:attributes="class python:test(field_linine, 'field-inline',
@@ -22,9 +23,9 @@
                tal:content="widget/label"
                i18n:translate="" />
 
-        <metal:block use-macro="python:get_input_macro(widget)" />
-
         <p tal:condition="error" tal:content="error" style="color: red;" />
+
+        <metal:block use-macro="input_template/macros/input" />
 
         </div>
 
