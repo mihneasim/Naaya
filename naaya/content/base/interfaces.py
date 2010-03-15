@@ -37,3 +37,21 @@ class INyContentObjectMovedEvent(Interface):
 
 class INyRdfView(Interface):
     """ Render an RDF document representing a given object """
+
+class ISchemaContentObject(Interface):
+    """ Content object that is schema-aware """
+
+    def get_schema():
+        """ Returns the schema for the object's type. """
+
+    def get_schema_properties():
+        """
+        Returns a dictionary, keyed by schema widget names, with
+        values from the object's properties.
+        """
+
+    def save_schema_properties(data):
+        """
+        Saves properties on the object; `data` is a dictionary in
+        the format returned by `get_schema_properties`.
+        """

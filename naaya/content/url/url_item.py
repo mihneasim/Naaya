@@ -370,7 +370,22 @@ class NyURL(url_item, NyAttributes, NyItem, NyCheckControl, NyValidation, NyCont
         """ """
         return self.getFormsTool().getContent({'here': self}, 'url_edit')
 
+    def get_schema_form_stuff(self):
+        from naaya.content.base.interfaces import ISchemaContentObject
+        schema_adapter = ISchemaContentObject(self)
+        return {
+            'form_data': schema_adapter.get_schema_properties(),
+            'form_errors': {},
+            'form_widgets': schema_adapter.get_schema().widgets,
+        }
+
 InitializeClass(NyURL)
+
+from naaya.core.schema import basic, zopeobj
+NyURL._nsch_schema = basic.Schema()
+for n in ['title', 'description', 'locator']:
+    w = basic.Widget(label=n, validator='ascii')
+    NyURL._nsch_schema.add(n, w)
 
 manage_addNyURL_html = PageTemplateFile('zpt/url_manage_add', globals())
 manage_addNyURL_html.kind = config['meta_type']
