@@ -342,7 +342,7 @@ class NyURL(url_item, NyAttributes, NyItem, NyCheckControl, NyValidation, NyCont
         except formencode.Invalid, e:
             form_errors = e.field_errors
         else:
-            schema_adapter.save_schema_properties(py_form_data)
+            schema_adapter.save_schema_properties(py_form_data, _lang)
             form_errors = {}
 
         if not form_errors:
@@ -379,9 +379,9 @@ class NyURL(url_item, NyAttributes, NyItem, NyCheckControl, NyValidation, NyCont
     security.declareProtected(PERMISSION_EDIT_OBJECTS, 'edit_html')
     def edit_html(self, REQUEST):
         """ """
-        #return self.getFormsTool().getContent({'here': self}, 'url_edit')
+        lang = self.gl_get_selected_language()
         schema_adapter = ISchemaContentObject(self)
-        py_form_data = schema_adapter.get_schema_properties()
+        py_form_data = schema_adapter.get_schema_properties(lang)
         options = {
             'form_data': schema_adapter.schema.from_python(py_form_data),
             'form_errors': {},
@@ -393,70 +393,8 @@ class NyURL(url_item, NyAttributes, NyItem, NyCheckControl, NyValidation, NyCont
 
 InitializeClass(NyURL)
 
-from naaya.core.schema.zopeobj import PersistentWidget, ZMISchema
-
-def create_default_zmi_schema(schema_id):
-    schema = ZMISchema(schema_id)
-
-    schema.add('title', PersistentWidget(
-                        label="Title",
-                        validator='unicode',
-                        template='naaya.core.schema.textfield',
-                        required=True,
-                        localized=True))
-
-    schema.add('description', PersistentWidget(
-                        label="Description",
-                        validator='unicode',
-                        template='naaya.core.schema.textarea',
-                        localized=True,
-                        tinymce=True))
-
-#    schema.add('geo_location', PersistentWidget(
-#                        label="Geographical location",
-#                        validator='geo',
-#                        template='naaya.core.schema.geolocation',
-#                        visible=False))
-
-#    schema.add('geo_type', PersistentWidget(
-#                        label="Geographical location type",
-#                        validator='ascii',
-#                        template='naaya.core.schema.geotype',
-#                        visible=False))
-
-    schema.add('coverage', PersistentWidget(
-                        label="Geographical coverage",
-                        validator='unicode',
-                        template='naaya.core.schema.glossary',
-                        glossary_id='coverage',
-                        localized=True))
-
-    schema.add('keywords', PersistentWidget(
-                        label="Keywords",
-                        validator='unicode',
-                        template='naaya.core.schema.glossary',
-                        glossary_id='keywords',
-                        localized=True))
-
-    schema.add('sortorder', PersistentWidget(
-                        label="Sort order",
-                        validator='int',
-                        template='naaya.core.schema.textfield',
-                        initial='int:100',
-                        required=True))
-
-#    schema.add('releasedate', PersistentWidget(
-#                        label="Release date",
-#                        validator='zopedate',
-#                        template='naaya.core.schema.date',
-#                        required=True))
-
-#    schema.add('discussion', PersistentWidget(
-#                        label="Open for comments",
-#                        validator='intbool',
-#                        template='naaya.core.schema.checkbox'))
-
-    return schema
+from naaya.core.schema.zopeobj import ZMISchema, PersistentWidget
+from naaya.content.base.schemacontent import create_default_zmi_schema
 
 def create_url_zmi_schema():
     schema = create_default_zmi_schema('naaya.content.url')
