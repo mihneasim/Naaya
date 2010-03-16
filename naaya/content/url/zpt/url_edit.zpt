@@ -2,4 +2,16 @@
 
 <h1 metal:fill-slot="title" i18n:translate="">Edit URL</h1>
 
+<metal:block fill-slot="schema_properties">
+    <tal:block define="templates_tool here/getFormsTool;
+                       tmpl python:templates_tool.getForm(
+                                   'naaya.core.schema.form');
+                       form_data options/form_data;
+                       form_errors options/form_errors;
+                       form_widgets options/form_widgets">
+        <metal:block use-macro="tmpl/macros/form" />
+    </tal:block>
+</metal:block>
+
+
 </tal:block>

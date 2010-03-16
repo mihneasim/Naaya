@@ -377,18 +377,19 @@ class NyURL(url_item, NyAttributes, NyItem, NyCheckControl, NyValidation, NyCont
         return self.getFormsTool().getContent({'here': self}, 'url_index')
 
     security.declareProtected(PERMISSION_EDIT_OBJECTS, 'edit_html')
-    def edit_html(self, REQUEST=None, RESPONSE=None):
+    def edit_html(self, REQUEST):
         """ """
-        return self.getFormsTool().getContent({'here': self}, 'url_edit')
-
-    def get_schema_form_stuff(self):
+        #return self.getFormsTool().getContent({'here': self}, 'url_edit')
         schema_adapter = ISchemaContentObject(self)
         py_form_data = schema_adapter.get_schema_properties()
-        return {
+        options = {
             'form_data': schema_adapter.schema.from_python(py_form_data),
             'form_errors': {},
             'form_widgets': schema_adapter.schema.widgets,
         }
+
+        template = self.getFormsTool().getForm('url_edit').aq_self.__of__(self)
+        return template(REQUEST, **options)
 
 InitializeClass(NyURL)
 
