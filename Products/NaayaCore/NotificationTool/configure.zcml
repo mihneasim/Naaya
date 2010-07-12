@@ -1,0 +1,40 @@
+<configure xmlns="http://namespaces.zope.org/zope">
+
+  <subscriber
+    handler="Products.NaayaCore.NotificationTool.subscribers.handle_object_add"
+    for="naaya.content.base.interfaces.INyContentObjectAddEvent"
+    />
+
+  <subscriber
+    handler="Products.NaayaCore.NotificationTool.subscribers.handle_csv_import"
+    for="Products.NaayaCore.interfaces.ICSVImportEvent"
+    />
+
+  <subscriber
+    handler="Products.NaayaCore.NotificationTool.subscribers.handle_zip_import"
+    for="Products.NaayaCore.interfaces.IZipImportEvent"
+    />
+
+  <subscriber
+    handler="Products.NaayaCore.NotificationTool.subscribers.handle_object_edit"
+    for="naaya.content.base.interfaces.INyContentObjectEditEvent"
+    />
+
+  <adapter
+    factory="..NotificationTool.NotificationsPortlet"
+    name="portlet_notifications"
+    />
+
+  <adapter
+    factory="..NotificationTool.subscription_container_factory"
+    />
+
+  <class class="Products.Naaya.NySite.NySite">
+    <implements interface="..interfaces.ISubscriptionTarget" />
+  </class>
+
+  <class class="Products.NaayaBase.NyContentType.NyContentType">
+    <implements interface="..interfaces.ISubscriptionTarget" />
+  </class>
+
+</configure>
