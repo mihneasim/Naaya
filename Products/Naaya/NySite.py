@@ -311,19 +311,15 @@ class NySite(NyRoleManager, CookieCrumbler, LocalPropertyManager, Folder,
             emailtool_ob = self.getEmailTool()
             authenticationtool_ob = self.getAuthenticationTool()
             notificationtool_ob = self.getNotificationTool()
+
             #load security permissions and roles
             if skel_handler.root.security is not None:
-                for permission in skel_handler.root.security.grouppermissions:
-                    authenticationtool_ob.addPermission(permission.name, permission.description, permission.permissions)
+                # TODO: reimplement mapping of permissions to roles
                 for role in skel_handler.root.security.roles:
-                    try: authenticationtool_ob.addRole(role.name, role.grouppermissions)
-                    except: pass
-                    #set the grouppermissions
-                    authenticationtool_ob.editRole(role.name, role.grouppermissions)
-                    #set individual permissions
-                    b = [x['name'] for x in self.permissionsOfRole(role.name) if x['selected']=='SELECTED']
-                    b.extend(role.permissions)
-                    self.manage_role(role.name, b)
+                    if role.name not in self.__ac_roles__:
+                        authenticationtool_ob.addRole(role.name)
+                    # TODO: set individual permissions
+
             #load pluggable content types
             if skel_handler.root.pluggablecontenttypes is not None:
                 for pluggablecontenttype in skel_handler.root.pluggablecontenttypes.pluggablecontenttypes:
@@ -3350,9 +3346,9 @@ class NySite(NyRoleManager, CookieCrumbler, LocalPropertyManager, Folder,
             if pitem == None:
                 raise ValueError('Missing pluggable content type "%s"' % meta_type)
 
-            #add content's permission to `Add content` permission group
-            acl = self.getAuthenticationTool()
-            acl.manage_group_permission('Add content', pitem['permission'], 'add')
+            #add content's permission to some roles
+            role_names = ('Manager', 'Administrator', 'Contributor')
+            self.manage_permission(pitem['permission'], role_names, acquire=1)
 
             #run `on_install` function if defined in content's `config`
             if 'on_install' in pitem:
@@ -3362,21 +3358,18 @@ class NySite(NyRoleManager, CookieCrumbler, LocalPropertyManager, Folder,
             self.__pluggable_installed_content[meta_type] = 1
             self.searchable_content.append(meta_type)
             self._p_changed = 1
+
         if REQUEST: REQUEST.RESPONSE.redirect('%s/manage_controlpanel_html' % self.absolute_url())
 
     security.declareProtected(view_management_screens, 'manage_uninstall_pluggableitem')
     def manage_uninstall_pluggableitem(self, meta_type=None, REQUEST=None):
         """ """
         if meta_type is not None:
-            pitem = self.get_pluggable_item(meta_type)
             #remember that this meta_type was removed
             del(self.__pluggable_installed_content[meta_type])
             self.searchable_content = [x for x in self.searchable_content if x != meta_type]
-            if pitem:
-                #remove content's permission from `Add content` permission group
-                acl = self.getAuthenticationTool()
-                acl.manage_group_permission('Add content', pitem['permission'], 'remove')
-            self._p_changed = 1
+            # not removing the permission (why bother?)
+
         if REQUEST: REQUEST.RESPONSE.redirect('%s/manage_controlpanel_html' % self.absolute_url())
 
     def is_logged(self, REQUEST=None):
