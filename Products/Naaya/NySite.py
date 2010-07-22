@@ -37,6 +37,7 @@ from datetime import datetime, timedelta
 import simplejson as json
 
 #Zope imports
+import Zope2
 import zLOG
 from OFS.Folder import Folder, manage_addFolder
 from OFS.Image import manage_addImage
@@ -3793,5 +3794,21 @@ class NySite(NyRoleManager, CookieCrumbler, LocalPropertyManager, Folder,
     rdf_cataloged_items = rdf_cataloged_items
 
     rstk = RestrictedToolkit()
+
+    security.declareProtected(view_management_screens, 'manage_getInstanceInfo')
+    def manage_getInstanceInfo(self,REQUEST):
+        """Provides information about installed products
+        in Json format, required manager authentication
+        """
+        # check for installed products
+        products=[]
+        products_folder = Zope2.app().Control_Panel.Products
+        for product_name in products_folder.objectIds():
+            p = products_folder._getOb(product_name,None)
+            if(p is not None and p.thisIsAnInstalledProduct==1):
+                products.append({'name':p.id,'version':p.version})
+                #print p.id, p.title, p.version, p.thisIsAnInstalledProduct
+        result = json.dumps(products)
+        return result
 
 InitializeClass(NySite)

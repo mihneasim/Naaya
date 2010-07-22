@@ -2,6 +2,7 @@
 import time
 from unittest import TestSuite, makeSuite
 from BeautifulSoup import BeautifulSoup
+import simplejson as json
 
 # Zope
 from DateTime import DateTime
@@ -74,6 +75,12 @@ class TestNySiteListing(NaayaFunctionalTestCase):
         self.assertTrue(site_info.has_index_link)
         self.assertTrue(site_info.has_edit_link)
 
+    def test_getInstanceInfo(self):
+        result = json.loads(self.portal.manage_getInstanceInfo(None))
+        self.assertTrue(len(result)>0)
+        for r in result:
+           self.assertTrue(r.has_key("name"))
+           self.assertTrue(r.has_key("version"))
 
 def test_suite():
     suite = TestSuite()
