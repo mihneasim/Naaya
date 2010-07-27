@@ -314,11 +314,14 @@ class NySite(NyRoleManager, CookieCrumbler, LocalPropertyManager, Folder,
 
             #load security permissions and roles
             if skel_handler.root.security is not None:
-                # TODO: reimplement mapping of permissions to roles
                 for role in skel_handler.root.security.roles:
                     if role.name not in self.__ac_roles__:
                         authenticationtool_ob.addRole(role.name)
-                    # TODO: set individual permissions
+                    for permission in role.permissions:
+                        p = Permission(permission.name, (), self)
+                        crt_roles = p.getRoles()
+                        ty = type(crt_roles)
+                        p.setRoles(ty(set(crt_roles) ^ set([role.name])))
 
             #load pluggable content types
             if skel_handler.root.pluggablecontenttypes is not None:
