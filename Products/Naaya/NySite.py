@@ -1620,7 +1620,7 @@ class NySite(NyRoleManager, CookieCrumbler, LocalPropertyManager, Folder,
                            confirm=confirm, roles=[], domains=[], firstname=firstname,
                            lastname=lastname, email=email, strict=0)
             except Exception, error:
-                err = error
+                err = unicode(error)
             else:
                 err = ''
             if err:
